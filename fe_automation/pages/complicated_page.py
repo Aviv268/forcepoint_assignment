@@ -1,6 +1,7 @@
 from playwright.sync_api import Page
 import logging
 import re
+from fe_automation.helpers import capture_screenshot
 
 
 class ComplicatedPage:
@@ -32,9 +33,10 @@ class ComplicatedPage:
         return count
 
     def verify_facebook_links(self, expected):
+        logging.info("Verifying Facebook links in the social media section.")
         links = self.SECTION_OF_SOCIAL_MEDIA.locator("a")
-        for i in range(links.count()):
-            href = links.nth(i).get_attribute('href')
+        for link in links.all():
+            href = link.get_attribute('href')
             if 'facebook.com' in href and href != expected:
                 return False
         return True
@@ -64,7 +66,7 @@ class ComplicatedPage:
             raise ValueError('Unsupported operator in captcha.')
 
         self.MATH_EXERCISE_INPUT.fill(str(answer))
-
+        capture_screenshot(self.page, "filled form")
         self.SUBMIT_BUTTON.click()
         logging.info("Form submitted.")
 

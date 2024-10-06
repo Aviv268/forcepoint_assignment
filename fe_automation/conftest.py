@@ -1,17 +1,12 @@
-import logging
+from fe_automation.helpers import setup_logging
 import pytest
 from playwright.sync_api import sync_playwright
+from fe_automation.helpers import capture_screenshot
 
 
-@pytest.fixture(scope='session', autouse=True)
-def setup_logging():
-    logging.basicConfig(
-        filename='fe_automation/logs/test.log',
-        filemode='w',
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        level=logging.INFO
-    )
-    logging.info('Logging setup complete.')
+@pytest.fixture(scope="session", autouse=True)
+def setup_environment():
+    setup_logging()
 
 
 @pytest.fixture(scope='session')
@@ -34,21 +29,19 @@ def context(browser):
     context.close()
 
 
-@pytest.fixture(scope='function')
-def page(context):
+@pytest.fixture(scope="function")
+def page(context, request):
     page = context.new_page()
     yield page
+
+    if request.node.rep_call.failed:
+        capture_screenshot(page, request.node.name)
     page.close()
 
 
-def pytest_terminal_summary(terminalreporter):
-    total = terminalreporter._numcollected
-    passed = len(terminalreporter.stats.get('passed', []))
-    failed = len(terminalreporter.stats.get('failed', []))
-    skipped = len(terminalreporter.stats.get('skipped', []))
-
-    print("\nTest Summary:")
-    print(f"Total: {total}")
-    print(f"Passed: {passed}")
-    print(f"Failed: {failed}")
-    print(f"Skipped: {skipped}")
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    rep = outcome.get_result()
+    if rep.when == "call":
+        item.rep_call = rep

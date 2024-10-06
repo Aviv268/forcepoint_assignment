@@ -1,12 +1,5 @@
-# Backend Dependencies
-pytest
 
-# Frontend Automation Dependencies
-playwright
-pytest-playwright
-pytest
-allure-pytest
-logging
-
-# Additional Dependencies
-# If you used any other libraries, add them here.
+pytest==8.3.3
+playwright==1.47.0
+pytest-playwright==0.5.2
+allure-pytest==2.13.5

@@ -1,18 +1,11 @@
 import csv
 import logging
 import os
-import pprint
 import random
+from src.utils.helpers import setup_logging
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('../logs/ride_allocation.log'),
-        logging.StreamHandler()
-    ]
-)
+setup_logging()
 
 
 def read_ride_requests(file_path):
@@ -78,25 +71,6 @@ def distribute_rides(ride_requests, approved_rides):
     return company_distribution
 
 
-# old version distribute_rides*******
-# def distribute_rides(company_requests, approved_rides):
-#     company_distribution = []
-#
-#     for request in company_requests:
-#         company = request['company_name']
-#         destination = request['destination']
-#         rides_requested = request['number_of_rides_requested']
-#
-#         if destination in approved_rides:
-#             approved = approved_rides[destination]
-#             allocation_ratio = min(approved / rides_requested, 1)  # Proportionally allocate
-#             company_rides = int(allocation_ratio * rides_requested // 100 * 100)  # Rounded down to nearest 100
-#             company_distribution.append((company, destination, company_rides))
-#             approved_rides[destination] -= company_rides  # Reduce available rides
-#
-#     return company_distribution
-# old version *******
-
 def write_ride_allocations(file_path, company_distribution):
     try:
         with open(file_path, 'w', newline='') as csvfile:
@@ -112,40 +86,17 @@ def write_ride_allocations(file_path, company_distribution):
 
 
 def main():
-    input_file_path = os.path.join('../data', 'ride_requests.csv')
-    output_file_path = os.path.join('../data', 'ride_allocations.csv')
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(script_dir, '..', 'data')
+    input_file_path = os.path.join(data_dir, 'ride_requests.csv')
+    output_file_path = os.path.join(data_dir, 'ride_allocations.csv')
 
-    # Step 1: Read ride requests
     ride_requests = read_ride_requests(input_file_path)
-
-    # Step 2: Aggregate requests per destination
     aggregated_requests = aggregate_requests(ride_requests)
-
-    # Step 3: Request approved rides from transit agency
     approved_rides = request_rides_from_transit_agency(aggregated_requests)
-
-    # Step 4: Distribute approved rides to companies
     company_distribution = distribute_rides(ride_requests, approved_rides)
-
-    # Step 5: Write the distribution to an output file
     write_ride_allocations(output_file_path, company_distribution)
 
 
 if __name__ == '__main__':
     main()
-
-# if __name__ == '__main__':
-#     input_file_path = os.path.join('../data', 'ride_requests.csv')
-#     ride_requests = read_ride_requests(input_file_path)
-#     pprint.pprint(('Ride Requests:', ride_requests))
-#
-#     aggregated_ride_requests = aggregate_requests(ride_requests)
-#
-#     # Print to verify
-#     print('Aggregated Requests:', aggregated_ride_requests)
-#
-#     approved_rides = request_rides_from_transit_agency(aggregated_ride_requests)
-#     print('Approved Rides:', approved_rides)
-#
-#     company_distribution = distribute_rides(ride_requests, approved_rides)
-#     print(company_distribution)
